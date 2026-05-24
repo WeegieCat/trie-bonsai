@@ -2,13 +2,22 @@
 
 > 文字列から生まれる、美しい盆栽。
 
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=white)
+![Three.js](https://img.shields.io/badge/Three.js-0.183-black?style=flat&logo=threedotjs&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white)
+![Hono](https://img.shields.io/badge/Hono-4-E36002?style=flat&logo=hono&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers_|_D1_|_R2-F38020?style=flat&logo=cloudflare&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Web-4285F4?style=flat&logo=googlechrome&logoColor=white)
+![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=flat&logo=githubactions&logoColor=white)
+
 <br />
 
 ## サービスのURL
 
 ログイン不要で、その場で文字を入力するだけで盆栽が育ちます。まずは触ってみてください。
 
-https://trie-bonsai.weegiecat.com
+https://2939976d.trie-bonsai.pages.dev/
 
 <br />
 
