@@ -1,108 +1,180 @@
-# Trie Bonsai
+# 🌿 Trie Bonsai
 
-文字列を入力し、Trie木構造を3D空間に盆栽として可視化するWebアプリケーション。
+> 文字列から生まれる、美しい盆栽。
 
-## 📦 プロジェクト構成
+<br />
 
-- **フロントエンド**: Next.js + React Three Fiber
-- **バックエンド**: Cloudflare Workers + Hono（Phase 6 で基盤構築完了）
-- **データベース**: Cloudflare D1（SQLite互換）
-- **ストレージ**: Cloudflare R2（S3互換）
+## サービスのURL
 
-## 🚀 ローカル開発環境のセットアップ
+ログイン不要で、その場で文字を入力するだけで盆栽が育ちます。まずは触ってみてください。
 
-### 前提条件
+https://trie-bonsai.weegiecat.com
+
+<br />
+
+## サービスへの想い
+
+「データ構造を、教科書の中の抽象的な絵ではなく、手のひらに置きたくなる工芸品として表現したい」 — Trie Bonsai はそんな想いから生まれた個人プロジェクトです。
+
+Trie 木（トライ木）は文字列の共通接頭辞を枝として共有する木構造で、辞書検索やオートコンプリートで広く使われています。その性質は枝分かれしながら育つ植物に似ています。本アプリは、入力された単語群から構築される Trie 木を、3D 空間上の盆栽として可視化し、データ構造の美しさを直感的に味わえる体験を目指しました。
+
+技術面では「Cloudflare のエッジスタックだけで本番運用に耐えるプロダクトを一人で組み上げる」ことを学習目標に設定し、Pages・Workers・D1・R2 のフルマネージドな組み合わせで構築しています。
+
+<br />
+
+## アプリケーションのイメージ
+
+![アプリケーションのイメージ](docs/img/app-view/demo.gif)
+
+文字を入力すると、共通接頭辞ごとに枝分かれしながらリアルタイムに盆栽が成長します。マウスドラッグで自由に視点を変え、好きな角度から鑑賞できます。
+
+<br />
+
+## 機能一覧
+
+| トップ画面 | 作成画面 |
+| ---- | ---- |
+| ![トップ画面](docs/img/app-view/top.png) | ![作成画面](docs/img/app-view/creating.png) |
+| 「文字列から生まれる、美しい盆栽。」をキャッチコピーに、サンプル盆栽を背景にしたランディングページ。そのまま作成ページへ遷移できます。 | 文字列を入力して「生成」を押すと、Trie 木が 3D 盆栽として背面にリアルタイム描画されます。「設定」から木の種類・配色・背景を切り替え可能。 |
+
+| 設定画面 | ギャラリー画面 |
+| ---- | ---- |
+| ![設定画面](docs/img/app-view/settings.png) | ![ギャラリー画面](docs/img/app-view/gallery.png) |
+| 木の種類（プレフィックス木 / Patricia 木 / Suffix 木）、ノードグラデーション（Dusty Grass / New Life / Blessing / mochiHoppe など）、背景タイプ（雪 / 夜明 / 単色）を切り替え。各項目には解説モーダルを完備。 | 公開された盆栽作品を一覧表示。作品名で検索でき、カードをクリックすると個別の作品詳細ページへ遷移します。サムネイル画像は R2 から直接配信されるため高速に表示されます。 |
+
+| 画像保存モーダル | ギャラリーへの投稿 |
+| ---- | ---- |
+| ![画像保存モーダル](docs/img/app-view/save.png) | ![投稿確認モーダル](docs/img/app-view/post.png) |
+| 現在表示中の盆栽を PNG 画像としてローカルにダウンロード。Canvas を `toDataURL()` でスナップショット化しています。 | 作品にタイトルを付けて公開。画像は R2、メタデータは D1 へ並列保存され、個別 URL でいつでも鑑賞できるようになります。 |
+
+<br />
+
+## 使用技術
+
+| Category | Technology Stack |
+| --- | --- |
+| Frontend | TypeScript, Next.js 16 (App Router), React 19, React Three Fiber, Drei, Postprocessing |
+| 3D / Visualization | Three.js, Leva (GUI), 再帰的放射状レイアウト |
+| State Management | Zustand |
+| Styling | Tailwind CSS v4 |
+| Backend | TypeScript, Hono (Cloudflare Workers) |
+| ORM / DB | Drizzle ORM, Cloudflare D1 (SQLite互換) |
+| Object Storage | Cloudflare R2 (S3互換, パブリックCDN配信) |
+| Hosting | Cloudflare Pages (Frontend), Cloudflare Workers (API) |
+| CI / Deployment | Wrangler, GitHub 連携による自動デプロイ |
+| Dev Tools | ESLint, Prettier, Drizzle Kit |
+
+<br />
+
+## システム構成図
+
+```mermaid
+graph LR
+    User((👤 ユーザー)) -->|HTTPS| Pages[Cloudflare Pages<br/>Next.js Static]
+    Pages -->|fetch| Worker[Cloudflare Workers<br/>Hono API]
+    Worker -->|Drizzle ORM| D1[(Cloudflare D1<br/>メタデータ)]
+    Worker -->|PUT/GET| R2[(Cloudflare R2<br/>盆栽画像)]
+    User -.->|CDN直接配信| R2
+
+    classDef edge fill:#fef3c7,stroke:#d97706,stroke-width:2px;
+    classDef storage fill:#dbeafe,stroke:#2563eb,stroke-width:2px;
+    class Pages,Worker edge;
+    class D1,R2 storage;
+```
+
+エッジ側で全ての処理を完結させることで、低遅延と低運用コストを両立しています。ギャラリーの画像は Workers を経由せず R2 から直接 CDN 配信され、Egress 課金も発生しません。
+
+<br />
+
+## ER 図
+
+```mermaid
+erDiagram
+    BONSAI {
+        string id PK "UUID"
+        string title "作品タイトル"
+        json tree_data "入力単語リスト"
+        json config_data "見た目の設定値"
+        string image_url "R2 画像URL"
+        int created_at "作成日時 (Unix)"
+    }
+    R2_BUCKET {
+        blob image_file "PNG画像本体"
+    }
+    BONSAI ||--|| R2_BUCKET : "画像参照"
+```
+
+Cloudflare D1 では Single Table Design を採用し、構造データと表示設定を JSON カラムにまとめることで正規化を省略しています。
+
+<br />
+
+## 今後の展望
+
+MVP として 8 フェーズの開発を完了し、現在は本番運用中です。今後は鑑賞体験と表現力の拡張を進めていきます。
+
+- **達成済み (Phase 1〜8)**: Trie ロジック実装、3D 可視化、物理演算レイアウト、Cloudflare エッジ基盤、永続化 API、ギャラリー、本番デプロイ
+- **次フェーズ**: パトリシア木・サフィックス木の切り替え UI、テーマカラー（季節）プリセット、作品への簡易リアクション
+- **長期構想**: ユーザーアカウント、コレクション機能、Web Share API による画像共有強化
+
+<br />
+
+## ローカル開発
+
+<details>
+<summary>セットアップ手順を開く</summary>
+
+### 前提
 
 - Node.js 20.x 以上
-- npm または yarn
-- Git
-
-### フロントエンド（Next.js）の起動
-
-```bash
-# リポジトリクローン
-git clone <repository-url>
-cd triebonsai
-
-# 依存関係インストール
-npm install
-
-# 開発サーバー起動
-npm run dev
-```
-
-フロントエンドは `http://localhost:3000` で起動します。
-
-### バックエンド（Worker）の起動（Phase 6〜）
-
-```bash
-# Worker ディレクトリへ移動
-cd workers/api
-
-# 依存関係インストール
-npm install
-
-# ローカル開発サーバー起動
-npm run dev
-```
-
-Worker は `http://localhost:8787` で起動します。
-
-#### 環境変数
-
-Worker の本番環境へのデプロイ時は以下の環境変数が必要です（ローカル開発では自動的にモック環境が利用されます）。
-
-- `CLOUDFLARE_ACCOUNT_ID`: Cloudflare アカウントID
-- `CLOUDFLARE_D1_DATABASE_ID`: D1 データベースID
-- `CLOUDFLARE_API_TOKEN`: Cloudflare API トークン
-
-ローカル開発では `wrangler.toml` にダミーIDが設定済みで、そのまま起動可能です。
-
-## 📖 開発フェーズ
-
-このプロジェクは8フェーズのイテレーション開発で進行中です。詳細は [ロードマップ](https://github.com/WeegieCat/Trie-Bonsai/wiki/%E3%83%AD%E3%83%BC%E3%83%89%E3%83%9E%E3%83%83%E3%83%97) を参照してください。
-
-- **Phase 1〜5**: フロントエンド実装（完了）
-- **Phase 6**: Edge基盤構築（完了） ← 現在ここ
-- **Phase 7**: 永続化実装（未着手）
-- **Phase 8**: ギャラリー・本番デプロイ（未着手）
-
-## 🛠️ 主要スクリプト
+- npm
 
 ### フロントエンド
 
-- `npm run dev`: 開発サーバー起動
-- `npm run build`: 本番ビルド
-- `npm run lint`: ESLint 実行
+```bash
+npm install
+npm run dev
+```
 
-### バックエンド（workers/api）
+`http://localhost:3000` で起動します。
 
-- `npm run dev`: Wrangler 開発サーバー起動
-- `npm run typecheck`: TypeScript 型チェック
-- `npm run db:generate`: Drizzle ORM マイグレーション生成
-- `npm run deploy`: Cloudflare Workers への本番デプロイ
+### バックエンド (Workers API)
 
-## 📚 ドキュメント
+```bash
+cd workers/api
+npm install
+npm run dev
+```
 
-- [ロードマップ](https://github.com/WeegieCat/Trie-Bonsai/wiki/%E3%83%AD%E3%83%BC%E3%83%89%E3%83%9E%E3%83%83%E3%83%97)
+`http://localhost:8787` で起動します。`wrangler.toml` にダミー ID が設定済みのため、追加設定なしで起動可能です。
+
+### 主要スクリプト
+
+| Scope | Command | 内容 |
+| --- | --- | --- |
+| Frontend | `npm run dev` | 開発サーバー起動 |
+| Frontend | `npm run build` | 本番ビルド |
+| Frontend | `npm run lint` | ESLint 実行 |
+| Workers | `npm run dev` | Wrangler 開発サーバー |
+| Workers | `npm run typecheck` | TypeScript 型チェック |
+| Workers | `npm run db:generate` | Drizzle マイグレーション生成 |
+| Workers | `npm run deploy` | 本番 Workers へデプロイ |
+
+本番デプロイの詳細は [DEPLOY_GUIDE.md](DEPLOY_GUIDE.md) を参照してください。
+
+</details>
+
+<br />
+
+## ドキュメント
+
+詳細な設計資料は GitHub Wiki に整理しています。
+
 - [要件定義書](https://github.com/WeegieCat/Trie-Bonsai/wiki/%E8%A6%81%E4%BB%B6%E5%AE%9A%E7%BE%A9%E6%9B%B8)
-- [UML](https://github.com/WeegieCat/Trie-Bonsai/wiki/UML)
+- [ロードマップ](https://github.com/WeegieCat/Trie-Bonsai/wiki/%E3%83%AD%E3%83%BC%E3%83%89%E3%83%9E%E3%83%83%E3%83%97)
+- [UML（アーキテクチャ / ER / ユースケース / シーケンス図）](https://github.com/WeegieCat/Trie-Bonsai/wiki/UML)
+- [SBOM](https://github.com/WeegieCat/Trie-Bonsai/wiki/SBOM)
 
-## 🔧 技術スタック
-
-**Frontend**
-
-- Next.js 16
-- React Three Fiber
-- Zustand（状態管理）
-- TailwindCSS
-
-**Backend**
-
-- Cloudflare Workers
-- Hono
-- Drizzle ORM
-- Cloudflare D1 / R2
+<br />
 
 ## ライセンス
 

@@ -8,7 +8,7 @@ export function Footer() {
                 <div className='mt-4 flex justify-center gap-6 text-xs'>
                     <a
                         href='https://mastodon.compositecomputer.club/@FEYNMAN1729'
-                        target='_blank'
+                        target='_top'
                         rel='noopener noreferrer'
                         className='hover:text-white transition-colors'>
                         Mastodon

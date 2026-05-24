@@ -13,7 +13,6 @@ export function BonsaiCard({
     imageUrl,
     onDetailClick,
 }: BonsaiCardProps) {
-
     return (
         <div className='bg-gray-800 rounded-lg overflow-hidden hover:shadow-xl hover:shadow-green-500/20 transition-all duration-300 group'>
             {/* 画像 */}
